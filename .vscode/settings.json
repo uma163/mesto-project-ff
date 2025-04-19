@@ -1,0 +1,16 @@
+{
+
+    "editor.tokenColorCustomizations": {
+    "textMateRules": [
+        {
+            "scope": [
+                "string",
+                "comment"
+            ],
+            "settings": {
+                "foreground": "#9e9090d3" // Замените на желаемый цвет
+            }
+        }
+    ]
+}
+}
