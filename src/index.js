@@ -47,9 +47,14 @@ function createCardElement(cardData) {
   return cardElement;
 }
 
-// Функция для рендеринга карточки
-function renderCard(cardData) {
-  elements.placesList.append(createCardElement(cardData));
+// Функция для рендеринга карточки с анимацией
+function renderCard(cardData, index = 0) {
+  const cardElement = createCardElement(cardData);
+  elements.placesList.append(cardElement);
+
+  // Анимация появления карточки
+  const card = elements.placesList.lastElementChild;
+  card.style.animation = `cardAppear 0.5s ease ${index * 0.1}s forwards`;
 }
 
 // Управление модальными окнами
@@ -62,7 +67,7 @@ const modal = {
   },
 
   open(modalElement) {
-    modalElement.style.display = "flex";
+    modalElement.style.visibility = "visible";
     requestAnimationFrame(() => {
       modalElement.classList.add("popup_is-opened");
     });
@@ -72,18 +77,22 @@ const modal = {
 
   close(modalElement) {
     modalElement.classList.remove("popup_is-opened");
-    const handler = () => {
-      modalElement.style.display = "none";
-      modalElement.removeEventListener("transitionend", handler);
+    const handleTransitionEnd = () => {
+      modalElement.style.visibility = "hidden";
+      modalElement.removeEventListener("transitionend", handleTransitionEnd);
     };
-    modalElement.addEventListener("transitionend", handler, { once: true });
+    modalElement.addEventListener("transitionend", handleTransitionEnd, {
+      once: true,
+    });
     document.removeEventListener("keydown", this.handleEscKeyUp.bind(this));
   },
 
   setupListeners(popup) {
     const closeButton = popup.querySelector(".popup__close");
-    if (!closeButton) {
-      console.warn("Close button not found!");
+    const popupContent = popup.querySelector(".popup__content");
+
+    if (!closeButton || !popupContent) {
+      console.warn("Popup elements not found!");
       return;
     }
 
@@ -92,8 +101,12 @@ const modal = {
       this.close(popup);
     });
 
-    popup.addEventListener("click", (e) => {
-      if (e.target === popup) this.close(popup);
+    popupContent.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    popup.addEventListener("click", () => {
+      this.close(popup);
     });
   },
 };
@@ -129,10 +142,14 @@ function setupFormHandlers() {
 
     elements.newCardForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      renderCard({
-        name: nameInput.value,
-        link: linkInput.value,
-      });
+      const cardsCount = document.querySelectorAll(".card").length;
+      renderCard(
+        {
+          name: nameInput.value,
+          link: linkInput.value,
+        },
+        cardsCount
+      );
       modal.close(elements.newCardForm.closest(".popup"));
       elements.newCardForm.reset();
     });
@@ -144,8 +161,6 @@ function setupFormHandlers() {
       const newCardPopup = document.querySelector(".popup_type_new-card");
       if (newCardPopup) {
         modal.open(newCardPopup);
-      } else {
-        console.error("Popup for new card not found");
       }
     });
   }
@@ -153,8 +168,8 @@ function setupFormHandlers() {
 
 // Инициализация
 document.addEventListener("DOMContentLoaded", () => {
-  // Рендер начальных карточек
-  initialCards.forEach(renderCard);
+  // Рендер начальных карточек с анимацией
+  initialCards.forEach((card, index) => renderCard(card, index));
 
   // Настройка обработчиков форм
   setupFormHandlers();
