@@ -15,17 +15,12 @@ const elements = {
   profileTitle: document.querySelector(".profile__title"),
   profileDescription: document.querySelector(".profile__description"),
   newCardForm: document.querySelector(".popup_type_new-card .popup__form"),
+  addButton: document.querySelector(".profile__add-button"),
   logoElement: document.querySelector(".logo"),
 };
 
 // Проверка наличия основных элементов
-if (
-  !elements.cardTemplate ||
-  !elements.placesList ||
-  !elements.imagePopup ||
-  !elements.popupImage ||
-  !elements.popupCaption
-) {
+if (!elements.cardTemplate || !elements.placesList) {
   throw new Error("Required elements are missing in the DOM");
 }
 
@@ -44,11 +39,9 @@ function createCardElement(cardData) {
   // Обработчики событий
   deleteButton.addEventListener("click", deleteCard);
   likeButton.addEventListener("click", toggleLike);
-  // В функции createCardElement:
   cardImage.addEventListener("click", () => {
-    console.log("Opening popup for:", cardData.name);
     handleImageClick(cardData, elements.imagePopup);
-    modal.open(elements.imagePopup); // Эта строка критически важна!
+    modal.open(elements.imagePopup);
   });
 
   return cardElement;
@@ -93,13 +86,12 @@ const modal = {
       console.warn("Close button not found!");
       return;
     }
-    // Закрытие по клику на крестик
+
     closeButton.addEventListener("click", (e) => {
       e.stopPropagation();
       this.close(popup);
     });
 
-    // Закрытие по клику на оверлей
     popup.addEventListener("click", (e) => {
       if (e.target === popup) this.close(popup);
     });
@@ -145,6 +137,18 @@ function setupFormHandlers() {
       elements.newCardForm.reset();
     });
   }
+
+  // Обработчик кнопки "+"
+  if (elements.addButton) {
+    elements.addButton.addEventListener("click", () => {
+      const newCardPopup = document.querySelector(".popup_type_new-card");
+      if (newCardPopup) {
+        modal.open(newCardPopup);
+      } else {
+        console.error("Popup for new card not found");
+      }
+    });
+  }
 }
 
 // Инициализация
@@ -155,10 +159,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Настройка обработчиков форм
   setupFormHandlers();
 
-  // Инициализация модального окна изображения
-  if (elements.imagePopup) {
-    modal.setupListeners(elements.imagePopup);
-  }
+  // Инициализация модальных окон
+  [
+    elements.imagePopup,
+    elements.editPopup,
+    document.querySelector(".popup_type_new-card"),
+  ]
+    .filter((popup) => popup)
+    .forEach((popup) => modal.setupListeners(popup));
 
   // Установка логотипа
   if (elements.logoElement) {
